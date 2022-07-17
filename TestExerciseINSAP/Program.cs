@@ -20,23 +20,6 @@ namespace TestExerciseINSAP
             FileStream reader = new FileStream(path, FileMode.Open, FileAccess.Read);
             StreamReader read = new StreamReader(reader);
 
-            List<string> words = new List<string>(); // список слов
-
-            //записываем слова в список пока они не закончатся
-            bool wordsEnded = false;
-            while (!wordsEnded)
-            {
-                string buferString = read.ReadLine();
-                if (String.IsNullOrEmpty(buferString))
-                {
-                    wordsEnded = true;
-                }
-                else
-                {
-                    words.Add(buferString);
-                }
-            }
-
             //просим ввести букву пока пользователь не введет правильно
             char letter = ' '; // буква для создания подстроки 
             bool exit = true;
@@ -61,21 +44,50 @@ namespace TestExerciseINSAP
                 }
             }
 
-            string result = "";
+            List<string> words = new List<string>(); // список слов
 
-            string max = "";
-
-
-            for(int i = 0; i < words.Count - 1; i++)
+            //записываем слова в список пока они не закончатся
+            bool wordsEnded = false;
+            while (!wordsEnded)
             {
-                
+                string buferString = read.ReadLine();
+                if (String.IsNullOrEmpty(buferString))
+                {
+                    wordsEnded = true;
+                }
+                else
+                {
+                    if (buferString.Contains(letter))
+                    words.Add(buferString);// записываем слово в массив если оно содержит данную букву
+                }
             }
-            
 
+            string result = "";//результат 
+
+            //находим первое слово 
+            int maxLength = 0;
+            for (int i = 0; i < words.Count; i++)
+            {
+                if (words[i][words[i].Length - 1] != letter) continue;//если правая буква не та которую мы ищем то проходим мимо
+                int bufLength = 1;
+                for (int j = words[i].Length - 2; j >= 0; j--)
+                {
+                    if (words[i][j] == letter) bufLength++;
+                    else break;
+                }
+                if (bufLength > maxLength && bufLength != words[i].Length) 
+                { 
+                    result = words[i];
+                    maxLength = bufLength;
+                }
+            }
+
+            string str = "";
 
 
             ////////////////
-            Console.WriteLine($"N = {words.Count} \nБуква - {letter}") ;
+            Console.WriteLine($"N = {words.Count} \nБуква - {letter}");
+            Console.WriteLine($"РЕЗУЛЬТАТ = {result}");
             Console.ReadKey();
 
 
