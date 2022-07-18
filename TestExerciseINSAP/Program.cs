@@ -227,7 +227,7 @@ namespace TestExerciseINSAP
             #endregion
 
             //заполняем массив 0
-            for(int i = 0; i < 26; i++)
+            for (int i = 0; i < 26; i++)
             {
                 countArr.Add(0);
             }
@@ -267,7 +267,7 @@ namespace TestExerciseINSAP
 
                 if (_letter == ' ')
                 {
-                    int i = 0; 
+                    int i = 0;
                     for (char chars = 'a'; chars <= 'z'; chars++)
                     {
                         countArr[i] = AlgorithmFindingSubstring(chars);
