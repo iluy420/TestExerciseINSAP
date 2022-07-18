@@ -8,6 +8,7 @@ namespace TestExerciseINSAP
 {
     internal class Program
     {
+        private static string _path = ""; // путь к файлу
         private static List<string> _words = new List<string>(); // список слов
         private static string _result = "";//результат
         private static char _letter = ' '; // буква для создания подстроки 
@@ -20,6 +21,9 @@ namespace TestExerciseINSAP
 
         private static string _bufWord = "";
         private static int _middleString = 0;
+
+        //массив запоминаем максимальные подстроки
+        private static List<int> countArr = new List<int>(26);
 
         //находим первое слово 
         private static void SearchFirstWord()
@@ -99,150 +103,194 @@ namespace TestExerciseINSAP
             _strRight = "";
             _bufWord = "";
             _middleString = 0;
-        } 
+        }
+
+        //алгоритм нахождения подстроки
+        private static int AlgorithmFindingSubstring(char chars)
+        {
+            _letter = chars;
+            FileStream reader = new FileStream(_path, FileMode.Open, FileAccess.Read);
+            StreamReader read = new StreamReader(reader);
+
+            #region обработка данных из файла
+            //записываем слова в список пока они не закончатся
+            bool _wordsEnded = false;
+            while (!_wordsEnded)
+            {
+                string buferString = read.ReadLine();
+                if (String.IsNullOrEmpty(buferString))
+                {
+                    _wordsEnded = true;
+                }
+                else
+                {
+                    if (buferString.Contains(_letter))
+                    {
+                        int amount = new Regex(_letter.ToString()).Matches(buferString).Count;
+                        if (amount == buferString.Length)
+                        {
+                            _middleString += amount;
+                            _result += buferString; // если слово состоит только из данного символа
+                            _result += " + ";
+                        }
+                        else _words.Add(buferString);// записываем слово в массив если оно содержит данную букву но не состоит полностью из него 
+                    }
+                }
+            }
+            try
+            {
+                _result = _result.Substring(0, _result.Length - 3);
+            }
+            catch
+            {
+
+            }
+            #endregion
+
+            SearchFirstWord();
+            SearchLastWord();
+
+            #region проверка на корректность
+            if (_strLeft == _strRight) // если слова одинаковы
+            {
+                // ищем кол-во таких слов в массиве
+                int _wordsAmount = 0;
+                for (int i = 0; i < _words.Count; i++)
+                {
+                    if (_words[i] == _strLeft)
+                    {
+                        _wordsAmount++;
+                    }
+                }
+                if (_wordsAmount < 2) // если таких слов меньше двух
+                {
+                    _bufWord = _strLeft; // запоминаем это слово 
+                    _words.Remove(_strLeft);// удаляем это слово из массива
+
+                    // заново ищем крайние слова
+                    SearchFirstWord();
+                    SearchLastWord();
+
+                    // ищем с какой стороны больше символов у буферного слова
+                    int leftCount = NumberOccurrencesOnLeft(_bufWord);
+                    int reghtCount = NumberOccurrencesOnRight(_bufWord);
+
+                    //находим количество идущих подря символов в новых словах
+                    int newLeftCount = NumberOccurrencesOnLeft(_strRight);
+                    int newReghtCount = NumberOccurrencesOnRight(_strLeft);
+
+                    //если новое крайнее слева слово + старое крайнее справа слово >=
+                    //новое крайнее справа слово + старое крайнее слева слово
+                    if (newReghtCount + leftCount >= newLeftCount + reghtCount)
+                        _strRight = _bufWord;
+                    else _strLeft = _bufWord;
+                }
+            }
+            #endregion
+
+            #region вывод результата
+            Console.WriteLine($"Буква - {_letter}");
+            int SubstringLength = NumberOccurrencesOnRight(_strLeft) + _middleString + NumberOccurrencesOnLeft(_strRight);
+            Console.WriteLine($"Максимальная длинна подстроки - {SubstringLength}");
+
+            if (_strLeft != "" && (_result != "" || _strRight != "")) _strLeft += " + ";
+            if (_strRight != "" && _result != "") _result += " + ";
+            Console.WriteLine($"РЕЗУЛЬТАТ = {_strLeft}{_result}{_strRight}");
+            #endregion
+
+            read.Close();
+            reader.Close();
+            return SubstringLength;
+        }
+
 
         private static void Main(string[] args)
         {
+
+            #region опрос пользоватея о пути к файлу
+            bool exitPath = false;
+            while (!exitPath)
+            {
+                Console.Write(@"Введите путь к файлу с исходными данными (D:\test\test.txt): ");
+                _path = Console.ReadLine(); //путь к файу
+                _path = _path.Replace("/", @"\"); // замена на правильный слеш в случае ошибки 
+                try
+                {
+                    FileStream fileStream = new FileStream(_path, FileMode.Open, FileAccess.Read);
+                    exitPath = true;
+                }
+                catch
+                {
+                    Console.WriteLine("Не верно введен путь к файлу!");
+                }
+            }
+            #endregion
+
+            //заполняем массив 0
+            for(int i = 0; i < 26; i++)
+            {
+                countArr.Add(0);
+            }
+
             bool exitProgramm = false;
             while (!exitProgramm)
             {
-                #region опрос пользователя и обработка данных из файла
-                string path = "";
-                bool exitPath = false;
-                while (!exitPath)
+                #region опрос на счет конкретной буквы
+                Console.Write("Если хотите задать определенный символ то введите [y] :");
+                string answer = Console.ReadLine();
+                if (answer == "y" || answer == "Y")
                 {
-                    Console.Write(@"Введите путь к файлу с исходными данными (D:\test\test.txt): ");
-                    path = Console.ReadLine(); //путь к файу
-                    path = path.Replace("/", @"\"); // замена на правильный слеш в случае ошибки 
-                    try
+                    //просим ввести букву пока пользователь не введет правильно
+                    bool exit = true;
+                    while (exit)
                     {
-                        FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
-                        exitPath = true;
-                    }
-                    catch
-                    {
-                        Console.WriteLine("Не верно введен путь к файлу!");
-                    }
-                }
-
-
-                FileStream reader = new FileStream(path, FileMode.Open, FileAccess.Read);
-                StreamReader read = new StreamReader(reader);
-
-                //просим ввести букву пока пользователь не введет правильно
-                bool exit = true;
-                while (exit)
-                {
-                    try
-                    {
-                        Console.Write("Введите из какой буквы вы хотите получить подстроку: ");
-                        _letter = Convert.ToChar(Console.ReadLine().ToLower()); // буква 
-                        if (Char.IsLetter(_letter) && _letter >= 'a' && _letter <= 'z')
+                        try
                         {
-                            exit = false;
+                            Console.Write("Введите из какой буквы вы хотите получить подстроку: ");
+                            _letter = Convert.ToChar(Console.ReadLine().ToLower()); // буква 
+                            if (Char.IsLetter(_letter) && _letter >= 'a' && _letter <= 'z')
+                            {
+                                exit = false;
+                            }
+                            else
+                            {
+                                Console.WriteLine("Буква должна быть одна [a-z]!");
+                            }
                         }
-                        else
+                        catch
                         {
                             Console.WriteLine("Буква должна быть одна [a-z]!");
                         }
                     }
-                    catch
-                    {
-                        Console.WriteLine("Буква должна быть одна [a-z]!");
-                    }
-                }
-
-
-                //записываем слова в список пока они не закончатся
-                bool _wordsEnded = false;
-                while (!_wordsEnded)
-                {
-                    string buferString = read.ReadLine();
-                    if (String.IsNullOrEmpty(buferString))
-                    {
-                        _wordsEnded = true;
-                    }
-                    else
-                    {
-                        if (buferString.Contains(_letter))
-                        {
-                            int amount = new Regex(_letter.ToString()).Matches(buferString).Count;
-                            if (amount == buferString.Length)
-                            {
-                                _middleString += amount;
-                                _result += buferString; // если слово состоит только из данного символа
-                                _result += " + ";
-                            }
-                            else _words.Add(buferString);// записываем слово в массив если оно содержит данную букву но не состоит полностью из него 
-                        }
-                    }
-                }
-                try
-                {
-                    _result = _result.Substring(0, _result.Length - 3);
-                }
-                catch
-                {
-
                 }
                 #endregion
 
-                SearchFirstWord();
-                SearchLastWord();
-
-                #region проверка на корректность
-                if (_strLeft == _strRight) // если слова одинаковы
+                if (_letter == ' ')
                 {
-                    // ищем кол-во таких слов в массиве
-                    int _wordsAmount = 0;
-                    for (int i = 0; i < _words.Count; i++)
+                    int i = 0; 
+                    for (char chars = 'a'; chars <= 'z'; chars++)
                     {
-                        if (_words[i] == _strLeft)
-                        {
-                            _wordsAmount++;
-                        }
+                        countArr[i] = AlgorithmFindingSubstring(chars);
+                        i++;
+                        ClearingData();
                     }
-                    if (_wordsAmount < 2) // если таких слов меньше двух
-                    {
-                        _bufWord = _strLeft; // запоминаем это слово 
-                        _words.Remove(_strLeft);// удаляем это слово из массива
-
-                        // заново ищем крайние слова
-                        SearchFirstWord();
-                        SearchLastWord();
-
-                        // ищем с какой стороны больше символов у буферного слова
-                        int leftCount = NumberOccurrencesOnLeft(_bufWord);
-                        int reghtCount = NumberOccurrencesOnRight(_bufWord);
-
-                        //находим количество идущих подря символов в новых словах
-                        int newLeftCount = NumberOccurrencesOnLeft(_strRight);
-                        int newReghtCount = NumberOccurrencesOnRight(_strLeft);
-
-                        //если новое крайнее слева слово + старое крайнее справа слово >=
-                        //новое крайнее справа слово + старое крайнее слева слово
-                        if (newReghtCount + leftCount >= newLeftCount + reghtCount)
-                            _strRight = _bufWord;
-                        else _strLeft = _bufWord;
-                    }
+                    Console.WriteLine("\n\n////////////ОТВЕТ////////////");
+                    _letter = Convert.ToChar(97 + countArr.IndexOf(countArr.Max()));
+                    AlgorithmFindingSubstring(_letter);
+                    Console.WriteLine("/////////////////////////////\n");
                 }
-                #endregion
-
-                #region вывод результата
-                Console.Clear();
-                Console.WriteLine($"Буква - {_letter}");
-                int SubstringLength = NumberOccurrencesOnRight(_strLeft) + _middleString + NumberOccurrencesOnLeft(_strRight);
-                Console.WriteLine($"Максимальная длинна подстроки - {SubstringLength}");
-
-                if (_strLeft != "") _strLeft += " + ";
-                if (_strRight != "" && _result != "") _result += " + ";
-                Console.WriteLine($"РЕЗУЛЬТАТ = {_strLeft}{_result}{_strRight}");
-                #endregion
+                else
+                {
+                    Console.WriteLine("\n\n////////////ОТВЕТ////////////");
+                    AlgorithmFindingSubstring(_letter);
+                    Console.WriteLine("/////////////////////////////\n");
+                }
 
                 ClearingData();
                 Console.Write("Если хотите выйти из программы введите [y] : ");
-                string answer = Console.ReadLine();
+                answer = Console.ReadLine();
                 if (answer == "y" || answer == "Y") exitProgramm = true;
+                Console.Clear();
             }
         }
     }
