@@ -23,7 +23,7 @@ namespace TestExerciseINSAP
         private static int _middleString = 0;
 
         //массив запоминаем максимальные подстроки
-        private static List<int> countArr = new List<int>(26);
+        private static List<int> _countArr = new List<int>(26);
 
         //находим первое слово 
         private static void SearchFirstWord()
@@ -167,6 +167,9 @@ namespace TestExerciseINSAP
                     _bufWord = _strLeft; // запоминаем это слово 
                     _words.Remove(_strLeft);// удаляем это слово из массива
 
+                    _strRight = "";
+                    _strLeft = "";
+
                     // заново ищем крайние слова
                     SearchFirstWord();
                     SearchLastWord();
@@ -203,7 +206,6 @@ namespace TestExerciseINSAP
             return SubstringLength;
         }
 
-
         private static void Main(string[] args)
         {
 
@@ -229,7 +231,7 @@ namespace TestExerciseINSAP
             //заполняем массив 0
             for (int i = 0; i < 26; i++)
             {
-                countArr.Add(0);
+                _countArr.Add(0);
             }
 
             bool exitProgramm = false;
@@ -270,14 +272,21 @@ namespace TestExerciseINSAP
                     int i = 0;
                     for (char chars = 'a'; chars <= 'z'; chars++)
                     {
-                        countArr[i] = AlgorithmFindingSubstring(chars);
+                        _countArr[i] = AlgorithmFindingSubstring(chars);
                         i++;
                         ClearingData();
                     }
                     Console.WriteLine("\n\n////////////ОТВЕТ////////////");
-                    _letter = Convert.ToChar(97 + countArr.IndexOf(countArr.Max()));
-                    AlgorithmFindingSubstring(_letter);
-                    Console.WriteLine("/////////////////////////////\n");
+                    for (int j = 0; j < _countArr.Count; j++)
+                    {
+                        if(_countArr[j] == _countArr.Max())
+                        {
+                            _letter = Convert.ToChar(97 + j);
+                            AlgorithmFindingSubstring(_letter);
+                            ClearingData();
+                            Console.WriteLine("/////////////////////////////\n");
+                        }
+                    }               
                 }
                 else
                 {
