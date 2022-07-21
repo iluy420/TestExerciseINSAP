@@ -253,6 +253,7 @@ namespace TestExerciseINSAP
             }
             #endregion
 
+            #region запись результата
             int SubstringLength = NumberOccurrencesOnRight(_strLeft) + _middleString + NumberOccurrencesOnLeft(_strRight);
             if (_letter != ' ' && SubstringLength > _countArr[_letter - 97])
             {
@@ -261,16 +262,7 @@ namespace TestExerciseINSAP
                 if (_strRight != "" && _result != "") _result += " + ";
                 _resultStringArr[_letter - 97] = _strLeft+ _result+ _strRight;
             }
-
-            #region вывод результата
-            //Console.WriteLine($"Буква - {_letter}");
-            
-           // Console.WriteLine($"Максимальная длинна подстроки - {SubstringLength}");
-
-            
-            //Console.WriteLine($"РЕЗУЛЬТАТ = {_strLeft}{_result}{_strRight}");
             #endregion
-
             read.Close();
             reader.Close();
             return SubstringLength;
