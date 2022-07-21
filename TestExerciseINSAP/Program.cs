@@ -23,7 +23,8 @@ namespace TestExerciseINSAP
         private static int _middleString = 0;
 
         //массив запоминаем максимальные подстроки
-        private static List<int> _countArr = new List<int>(26);
+        private static List<int> _countArr = new List<int>();
+        private static List<string> _resultStringArr = new List<string>();
 
         //находим первое слово 
         private static void SearchFirstWord()
@@ -91,6 +92,67 @@ namespace TestExerciseINSAP
             return reghtCount;
         }
 
+        //алгоритм нахождения подстроки в одном слове
+        private static void AlgorithmFindingSubstringInWords()
+        {
+            
+            FileStream reader = new FileStream(_path, FileMode.Open, FileAccess.Read);
+            StreamReader read = new StreamReader(reader);
+
+            #region обработка данных из файла
+            //записываем слова в список пока они не закончатся
+            bool _wordsEnded = false;
+            while (!_wordsEnded)
+            {
+                string buferString = read.ReadLine();
+                if (String.IsNullOrEmpty(buferString))
+                {
+                    _wordsEnded = true;
+                }
+                else
+                {
+                    _words.Add(buferString);// записываем слово в массив если оно содержит данную букву  
+                }
+            }
+            #endregion
+
+            #region поиск подстроки в одном слове
+
+            for(int i = 0; i < _words.Count; i++)
+            {
+                char buf = ' ';
+                int amount = 1;
+                for(int j = 0; j < _words[i].Length; j++)
+                {
+                    if(_words[i][j] != buf)
+                    {
+                        if(buf != ' ' && amount > _countArr[buf- 97])
+                        {
+                            _countArr[buf - 97] = amount;
+                            _resultStringArr[buf - 97] = _words[i];
+                        }
+                        amount = 1;
+                        buf = _words[i][j];
+                    }
+                    else
+                    {
+                        amount++;
+                    }
+                }
+                if (buf != ' ' && amount > _countArr[buf - 97])
+                {
+                    _countArr[buf - 97] = amount;
+                    _resultStringArr[buf - 97] = _words[i];
+                }
+            }
+
+            #endregion
+
+            read.Close();
+            reader.Close();
+            _words.Clear();
+        }
+
         //очиска полей
         private static void ClearingData()
         {
@@ -105,7 +167,7 @@ namespace TestExerciseINSAP
             _middleString = 0;
         }
 
-        //алгоритм нахождения подстроки
+        //алгоритм нахождения подстроки во всех словах
         private static int AlgorithmFindingSubstring(char chars)
         {
             _letter = chars;
@@ -191,14 +253,22 @@ namespace TestExerciseINSAP
             }
             #endregion
 
-            #region вывод результата
-            Console.WriteLine($"Буква - {_letter}");
             int SubstringLength = NumberOccurrencesOnRight(_strLeft) + _middleString + NumberOccurrencesOnLeft(_strRight);
-            Console.WriteLine($"Максимальная длинна подстроки - {SubstringLength}");
+            if (_letter != ' ' && SubstringLength > _countArr[_letter - 97])
+            {
+                _countArr[_letter - 97] = SubstringLength;
+                if (_strLeft != "" && (_result != "" || _strRight != "")) _strLeft += " + ";
+                if (_strRight != "" && _result != "") _result += " + ";
+                _resultStringArr[_letter - 97] = _strLeft+ _result+ _strRight;
+            }
 
-            if (_strLeft != "" && (_result != "" || _strRight != "")) _strLeft += " + ";
-            if (_strRight != "" && _result != "") _result += " + ";
-            Console.WriteLine($"РЕЗУЛЬТАТ = {_strLeft}{_result}{_strRight}");
+            #region вывод результата
+            //Console.WriteLine($"Буква - {_letter}");
+            
+           // Console.WriteLine($"Максимальная длинна подстроки - {SubstringLength}");
+
+            
+            //Console.WriteLine($"РЕЗУЛЬТАТ = {_strLeft}{_result}{_strRight}");
             #endregion
 
             read.Close();
@@ -232,11 +302,13 @@ namespace TestExerciseINSAP
             for (int i = 0; i < 26; i++)
             {
                 _countArr.Add(0);
+                _resultStringArr.Add("");
             }
 
             bool exitProgramm = false;
             while (!exitProgramm)
             {
+
                 #region опрос на счет конкретной буквы
                 Console.Write("Если хотите задать определенный символ то введите [y] :");
                 string answer = Console.ReadLine();
@@ -267,13 +339,14 @@ namespace TestExerciseINSAP
                 }
                 #endregion
 
+                AlgorithmFindingSubstringInWords();
+
+
                 if (_letter == ' ')
                 {
-                    int i = 0;
                     for (char chars = 'a'; chars <= 'z'; chars++)
                     {
-                        _countArr[i] = AlgorithmFindingSubstring(chars);
-                        i++;
+                        AlgorithmFindingSubstring(chars);
                         ClearingData();
                     }
                     Console.WriteLine("\n\n////////////ОТВЕТ////////////");
@@ -281,9 +354,9 @@ namespace TestExerciseINSAP
                     {
                         if(_countArr[j] == _countArr.Max())
                         {
-                            _letter = Convert.ToChar(97 + j);
-                            AlgorithmFindingSubstring(_letter);
-                            ClearingData();
+                            Console.WriteLine($"Буква: {Convert.ToChar('a'+ j)}");
+                            Console.WriteLine($"Результат: { _resultStringArr[j]}");
+                            Console.WriteLine($"Max длинна: { _countArr[j]}");
                             Console.WriteLine("/////////////////////////////\n");
                         }
                     }               
@@ -291,7 +364,9 @@ namespace TestExerciseINSAP
                 else
                 {
                     Console.WriteLine("\n\n////////////ОТВЕТ////////////");
-                    AlgorithmFindingSubstring(_letter);
+                    Console.WriteLine($"Буква: {_letter}");
+                    Console.WriteLine($"Результат: { _resultStringArr[_letter-97]}");
+                    Console.WriteLine($"Max длинна: { _countArr[_letter - 97]}");
                     Console.WriteLine("/////////////////////////////\n");
                 }
 
